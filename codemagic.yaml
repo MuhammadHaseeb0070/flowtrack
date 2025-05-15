@@ -39,14 +39,14 @@ workflows:
           # echo "Expo CLI version: $(expo --version)"
       - name: Log in to Expo
         script: |
-          # Ensure EXPO_TOKEN is available from Codemagic environment variables
+          # Ensure EXPO_TOKEN is available
           if [ -z "$EXPO_TOKEN" ]; then
-            echo "Error: EXPO_TOKEN is not set. Please ensure it's configured in Codemagic."
+            echo "Error: EXPO_TOKEN is not set."
             exit 1
           fi
-          echo "Attempting EAS login with token..."
-          # Using quotes around "$EXPO_TOKEN" is a good practice, though likely not the primary issue here
-          eas login --token "$EXPO_TOKEN"
+          echo "Attempting EAS login with token using npx..."
+          # Use npx to ensure the latest version of eas-cli is used for this command
+          npx eas-cli@latest login --token "$EXPO_TOKEN"
       - name: Start EAS Build for Android
         script: |
           eas build -p android --profile $EAS_BUILD_PROFILE --non-interactive --no-wait --output=./build-output.json
