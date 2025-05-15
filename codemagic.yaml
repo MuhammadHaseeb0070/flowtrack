@@ -24,35 +24,25 @@ workflows:
       - name: Install Node.js dependencies
         script: |
           npm install
-      - name: Install latest EAS CLI and Expo CLI
+      - name: Verify local EAS CLI version
         script: |
-          echo "Installing latest EAS CLI..."
-          npm install -g eas-cli@latest # Force installation of the latest eas-cli
-          
-          # Verify the version that was actually installed and is in PATH
-          INSTALLED_EAS_VERSION=$(eas --version)
-          echo "EAS CLI version installed: $INSTALLED_EAS_VERSION"
-
-          # If you still need a specific expo-cli version:
-          # echo "Installing Expo CLI version $EXPO_CLI_VERSION"
-          # npm install -g expo-cli@$EXPO_CLI_VERSION
-          # echo "Expo CLI version: $(expo --version)"
+          echo "Verifying local EAS CLI version from node_modules..."
+          ./node_modules/.bin/eas --version
       - name: Log in to Expo
         script: |
-          # Ensure EXPO_TOKEN is available
+          # Ensure EXPO_TOKEN is available from Codemagic environment variables
           if [ -z "$EXPO_TOKEN" ]; then
-            echo "Error: EXPO_TOKEN is not set."
+            echo "Error: EXPO_TOKEN is not set. Please ensure it's configured in Codemagic."
             exit 1
           fi
-          echo "Attempting EAS login with token using npx..."
-          # Use npx to ensure the latest version of eas-cli is used for this command
-          npx eas-cli@latest login --token "$EXPO_TOKEN"
+          echo "Attempting EAS login with token using local eas-cli..."
+          ./node_modules/.bin/eas login --token "$EXPO_TOKEN"
       - name: Start EAS Build for Android
         script: |
-          eas build -p android --profile $EAS_BUILD_PROFILE --non-interactive --no-wait --output=./build-output.json
+          echo "Starting EAS Build with local eas-cli..."
+          ./node_modules/.bin/eas build -p android --profile $EAS_BUILD_PROFILE --non-interactive --no-wait --output=./build-output.json
       - name: Wait for EAS Build to complete
         script: |
-          # (The rest of the wait script remains the same as before)
           BUILD_ID=$(jq -r '.id' build-output.json)
           if [ -z "$BUILD_ID" ]; then
             echo "Failed to get build ID from build-output.json"
@@ -66,7 +56,7 @@ workflows:
           MAX_COUNTER=$((TIMEOUT_MINUTES * 60 / 30)) 
 
           while [ $COUNTER -lt $MAX_COUNTER ]; do
-            BUILD_STATUS_JSON=$(eas build:view $BUILD_ID --json)
+            BUILD_STATUS_JSON=$(./node_modules/.bin/eas build:view $BUILD_ID --json)
             BUILD_STATUS=$(echo $BUILD_STATUS_JSON | jq -r '.status')
             echo "Current build status: $BUILD_STATUS"
 
