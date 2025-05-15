@@ -1,0 +1,96 @@
+{
+  "categories": [
+    {
+      "id": "food",
+      "name": "Food & Dining",
+      "type": "expense",
+      "color": "#FF6B6B",
+      "icon": "food"
+    },
+    {
+      "id": "transport",
+      "name": "Transportation",
+      "type": "expense",
+      "color": "#4ECDC4",
+      "icon": "car"
+    },
+    {
+      "id": "shopping",
+      "name": "Shopping",
+      "type": "expense",
+      "color": "#FFD93D",
+      "icon": "shopping"
+    },
+    {
+      "id": "entertainment",
+      "name": "Entertainment",
+      "type": "expense",
+      "color": "#95E1D3",
+      "icon": "movie"
+    },
+    {
+      "id": "bills",
+      "name": "Bills & Utilities",
+      "type": "expense",
+      "color": "#FF8B94",
+      "icon": "file-document"
+    },
+    {
+      "id": "health",
+      "name": "Health & Medical",
+      "type": "expense",
+      "color": "#6C5CE7",
+      "icon": "medical-bag"
+    },
+    {
+      "id": "education",
+      "name": "Education",
+      "type": "expense",
+      "color": "#A8E6CF",
+      "icon": "school"
+    },
+    {
+      "id": "other_expense",
+      "name": "Other Expense",
+      "type": "expense",
+      "color": "#FFB6B9",
+      "icon": "dots-horizontal"
+    },
+    {
+      "id": "salary",
+      "name": "Salary",
+      "type": "income",
+      "color": "#4CAF50",
+      "icon": "cash"
+    },
+    {
+      "id": "freelance",
+      "name": "Freelance",
+      "type": "income",
+      "color": "#2196F3",
+      "icon": "laptop"
+    },
+    {
+      "id": "investments",
+      "name": "Investments",
+      "type": "income",
+      "color": "#9C27B0",
+      "icon": "chart-line"
+    },
+    {
+      "id": "gifts",
+      "name": "Gifts",
+      "type": "income",
+      "color": "#FF9800",
+      "icon": "gift"
+    },
+    {
+      "id": "other_income",
+      "name": "Other Income",
+      "type": "income",
+      "color": "#607D8B",
+      "icon": "dots-horizontal"
+    }
+  ],
+  "transactions": []
+} 

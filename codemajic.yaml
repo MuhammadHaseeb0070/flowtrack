@@ -1,0 +1,96 @@
+# codemagic.yaml
+workflows:
+  android-build:
+    name: Android Build
+    instance_type: mac_mini_m1 # Or your preferred instance type
+    max_build_duration: 60 # minutes
+    environment:
+      node: 18 # Specify your Node.js version (LTS recommended)
+      eas_cli: latest # Or a specific version
+      expo_cli: latest # Or a specific version
+      groups:
+        - expo_credentials # Group for your EAS login secrets (EXPO_TOKEN)
+      vars:
+        EAS_BUILD_PROFILE: preview # Your EAS build profile for Android
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main # Or your main development branch
+          include: true
+          source: true
+    scripts:
+      - name: Install Node.js dependencies
+        script: |
+          npm install
+      - name: Install EAS CLI and Expo CLI (if not using global from environment)
+        script: |
+          # npm install -g eas-cli expo-cli # If not defined in 'environment' above or you need specific control here
+          echo "EAS CLI version: $(eas --version)"
+          echo "Expo CLI version: $(expo --version)"
+      - name: Log in to Expo
+        script: |
+          # Ensure EXPO_TOKEN is set as a secure environment variable in Codemagic
+          eas login --token $EXPO_TOKEN
+      - name: Start EAS Build for Android
+        script: |
+          eas build -p android --profile $EAS_BUILD_PROFILE --non-interactive --no-wait --output=./build-output.json
+          # The --no-wait flag makes the build command return immediately.
+          # We will use the build ID from build-output.json to track the build status.
+      - name: Wait for EAS Build to complete
+        script: |
+          # Extract build ID (this might need adjustment based on actual JSON output structure)
+          BUILD_ID=$(jq -r '.id' build-output.json)
+          if [ -z "$BUILD_ID" ]; then
+            echo "Failed to get build ID from build-output.json"
+            cat build-output.json
+            exit 1
+          fi
+          echo "EAS Build ID: $BUILD_ID"
+          
+          # Loop and check status
+          # Adjust timeout and sleep duration as needed
+          TIMEOUT_MINUTES=45 
+          COUNTER=0
+          MAX_COUNTER=$((TIMEOUT_MINUTES * 60 / 30)) # Check every 30 seconds
+
+          while [ $COUNTER -lt $MAX_COUNTER ]; do
+            BUILD_STATUS_JSON=$(eas build:view $BUILD_ID --json)
+            BUILD_STATUS=$(echo $BUILD_STATUS_JSON | jq -r '.status')
+            echo "Current build status: $BUILD_STATUS"
+
+            if [ "$BUILD_STATUS" = "finished" ]; then
+              ARTIFACT_URL=$(echo $BUILD_STATUS_JSON | jq -r '.artifacts.buildUrl')
+              if [ -z "$ARTIFACT_URL" ]; then
+                 echo "Build finished but no artifact URL found."
+                 echo $BUILD_STATUS_JSON
+                 exit 1
+              fi
+              echo "Build finished! Artifact URL: $ARTIFACT_URL"
+              # Download the artifact
+              curl -o app-release.apk "$ARTIFACT_URL"
+              echo "Artifact downloaded as app-release.apk"
+              exit 0
+            elif [ "$BUILD_STATUS" = "errored" ] || [ "$BUILD_STATUS" = "canceled" ]; then
+              echo "Build failed or was canceled. Status: $BUILD_STATUS"
+              echo $BUILD_STATUS_JSON
+              exit 1
+            fi
+            
+            COUNTER=$((COUNTER + 1))
+            sleep 30
+          done
+          echo "Build timed out after $TIMEOUT_MINUTES minutes."
+          exit 1
+    artifacts:
+      - app-release.apk # Path to the downloaded artifact
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app # For iOS, if you build that too
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM # For iOS symbols
+    publishing:
+      # Example: Email notification (configure in Codemagic UI)
+      email:
+        recipients:
+          - nastymaverick63@gmail.com
+        notify:
+          success: true
+          failure: true
