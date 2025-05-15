@@ -35,7 +35,7 @@ workflows:
           echo "Expo CLI version: $(expo --version)"
       - name: Log in to Expo
         script: |
-          eas login --token $EXPO_TOKEN
+          eas login --token ZCdUb2AGUdDWcZrxggn8Ff2UwOH94GGM9_3J1RRv
       - name: Start EAS Build for Android
         script: |
           eas build -p android --profile $EAS_BUILD_PROFILE --non-interactive --no-wait --output=./build-output.json
