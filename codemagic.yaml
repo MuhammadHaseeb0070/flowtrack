@@ -2,44 +2,46 @@
 workflows:
   android-build:
     name: Android Build
-    instance_type: mac_mini_m1 # Or your preferred instance type
-    max_build_duration: 60 # minutes
+    instance_type: mac_mini_m1
+    max_build_duration: 60
     environment:
-      node: 20.17.0 # Specify your Node.js version (LTS recommended)
-      eas_cli: 16.6.1 # Or a specific version
-      expo_cli: 6.3.12 # Or a specific version
+      node: '18.17.0' # Or your specific Node.js version
       groups:
-        - expo_credentials # Group for your EAS login secrets (EXPO_TOKEN)
+        - expo_credentials
       vars:
-        EAS_BUILD_PROFILE: preview # Your EAS build profile for Android
+        EAS_BUILD_PROFILE: preview
+        # Define the desired CLI versions here as variables
+        EAS_CLI_VERSION: '7.2.0'   # Replace with your eas --version
+        EXPO_CLI_VERSION: '10.0.1' # Replace with your expo --version
     triggering:
       events:
         - push
       branch_patterns:
-        - pattern: main # Or your main development branch
+        - pattern: main
           include: true
           source: true
     scripts:
       - name: Install Node.js dependencies
         script: |
           npm install
-      - name: Install EAS CLI and Expo CLI (if not using global from environment)
+      - name: Install specific EAS CLI and Expo CLI versions
         script: |
-          # npm install -g eas-cli expo-cli # If not defined in 'environment' above or you need specific control here
+          echo "Installing EAS CLI version $EAS_CLI_VERSION"
+          npm install -g eas-cli@$EAS_CLI_VERSION
+          echo "Installing Expo CLI version $EXPO_CLI_VERSION"
+          npm install -g expo-cli@$EXPO_CLI_VERSION 
+          # Verify versions
           echo "EAS CLI version: $(eas --version)"
           echo "Expo CLI version: $(expo --version)"
       - name: Log in to Expo
         script: |
-          # Ensure EXPO_TOKEN is set as a secure environment variable in Codemagic
           eas login --token $EXPO_TOKEN
       - name: Start EAS Build for Android
         script: |
           eas build -p android --profile $EAS_BUILD_PROFILE --non-interactive --no-wait --output=./build-output.json
-          # The --no-wait flag makes the build command return immediately.
-          # We will use the build ID from build-output.json to track the build status.
       - name: Wait for EAS Build to complete
         script: |
-          # Extract build ID (this might need adjustment based on actual JSON output structure)
+          # (The rest of the wait script remains the same as before)
           BUILD_ID=$(jq -r '.id' build-output.json)
           if [ -z "$BUILD_ID" ]; then
             echo "Failed to get build ID from build-output.json"
@@ -48,11 +50,9 @@ workflows:
           fi
           echo "EAS Build ID: $BUILD_ID"
           
-          # Loop and check status
-          # Adjust timeout and sleep duration as needed
           TIMEOUT_MINUTES=45 
           COUNTER=0
-          MAX_COUNTER=$((TIMEOUT_MINUTES * 60 / 30)) # Check every 30 seconds
+          MAX_COUNTER=$((TIMEOUT_MINUTES * 60 / 30)) 
 
           while [ $COUNTER -lt $MAX_COUNTER ]; do
             BUILD_STATUS_JSON=$(eas build:view $BUILD_ID --json)
@@ -67,7 +67,6 @@ workflows:
                  exit 1
               fi
               echo "Build finished! Artifact URL: $ARTIFACT_URL"
-              # Download the artifact
               curl -o app-release.apk "$ARTIFACT_URL"
               echo "Artifact downloaded as app-release.apk"
               exit 0
@@ -83,14 +82,5 @@ workflows:
           echo "Build timed out after $TIMEOUT_MINUTES minutes."
           exit 1
     artifacts:
-      - app-release.apk # Path to the downloaded artifact
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app # For iOS, if you build that too
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM # For iOS symbols
-    publishing:
-      # Example: Email notification (configure in Codemagic UI)
-      email:
-        recipients:
-          - nastymaverick63@gmail.com
-        notify:
-          success: true
-          failure: true
+      - app-release.apk
+    # ... publishing ...
