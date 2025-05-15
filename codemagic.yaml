@@ -5,9 +5,9 @@ workflows:
     instance_type: mac_mini_m1 # Or your preferred instance type
     max_build_duration: 60 # minutes
     environment:
-      node: 18 # Specify your Node.js version (LTS recommended)
-      eas_cli: latest # Or a specific version
-      expo_cli: latest # Or a specific version
+      node: 20.17.0 # Specify your Node.js version (LTS recommended)
+      eas_cli: 16.6.1 # Or a specific version
+      expo_cli: 6.3.12 # Or a specific version
       groups:
         - expo_credentials # Group for your EAS login secrets (EXPO_TOKEN)
       vars:
