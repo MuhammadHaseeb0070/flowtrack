@@ -11,8 +11,8 @@ workflows:
       vars:
         EAS_BUILD_PROFILE: preview
         # Define the desired CLI versions here as variables
-        EAS_CLI_VERSION: '7.2.0'   # Replace with your eas --version
-        EXPO_CLI_VERSION: '10.0.1' # Replace with your expo --version
+        # EXPO_CLI_VERSION: '10.0.1' # Or your desired expo-cli version, if still needed
+        # No need to specify EAS_CLI_VERSION if installing @latest
     triggering:
       events:
         - push
@@ -24,18 +24,29 @@ workflows:
       - name: Install Node.js dependencies
         script: |
           npm install
-      - name: Install specific EAS CLI and Expo CLI versions
+      - name: Install latest EAS CLI and Expo CLI
         script: |
-          echo "Installing EAS CLI version $EAS_CLI_VERSION"
-          npm install -g eas-cli@$EAS_CLI_VERSION
-          echo "Installing Expo CLI version $EXPO_CLI_VERSION"
-          npm install -g expo-cli@$EXPO_CLI_VERSION 
-          # Verify versions
-          echo "EAS CLI version: $(eas --version)"
-          echo "Expo CLI version: $(expo --version)"
+          echo "Installing latest EAS CLI..."
+          npm install -g eas-cli@latest # Force installation of the latest eas-cli
+          
+          # Verify the version that was actually installed and is in PATH
+          INSTALLED_EAS_VERSION=$(eas --version)
+          echo "EAS CLI version installed: $INSTALLED_EAS_VERSION"
+
+          # If you still need a specific expo-cli version:
+          # echo "Installing Expo CLI version $EXPO_CLI_VERSION"
+          # npm install -g expo-cli@$EXPO_CLI_VERSION
+          # echo "Expo CLI version: $(expo --version)"
       - name: Log in to Expo
         script: |
-          eas login --token ZCdUb2AGUdDWcZrxggn8Ff2UwOH94GGM9_3J1RRv
+          # Ensure EXPO_TOKEN is available from Codemagic environment variables
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "Error: EXPO_TOKEN is not set. Please ensure it's configured in Codemagic."
+            exit 1
+          fi
+          echo "Attempting EAS login with token..."
+          # Using quotes around "$EXPO_TOKEN" is a good practice, though likely not the primary issue here
+          eas login --token "$EXPO_TOKEN"
       - name: Start EAS Build for Android
         script: |
           eas build -p android --profile $EAS_BUILD_PROFILE --non-interactive --no-wait --output=./build-output.json
