@@ -30,7 +30,7 @@ workflows:
           ./node_modules/.bin/eas --version
       - name: Log in to Expo
         script: |
-          # Ensure EXPO_TOKEN is available from Codemagic environment variables
+          # Ensure  bncx is available from Codemagic environment variables
           if [ -z "$EXPO_TOKEN" ]; then
             echo "Error: EXPO_TOKEN is not set. Please ensure it's configured in Codemagic."
             exit 1
